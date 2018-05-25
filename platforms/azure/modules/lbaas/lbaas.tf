@@ -40,21 +40,15 @@ module "lbaas" {
 
 
 resource "azurerm_public_ip" "lb" {
-#  count                        = "${module.lbaas.flag}"
+  count                        = "${module.lbaas.flag}"
   name                         = "${var.name}"
   location                     = "${var.region}"
   resource_group_name          = "${var.resource_group_name}"
   public_ip_address_allocation = "Static"
 }
 
-data "azurerm_public_ip" "lb" {
-  name = "${var.name}"
-  resource_group_name = "${var.resource_group_name}"
-  depends_on          = ["azurerm_public_ip.lb"]
-}
-
 resource "azurerm_lb" "lb" {
-#  count                        = "${module.lbaas.flag}"
+  count                        = "${module.lbaas.flag}"
   name                         = "${var.name}"
   location                     = "${var.region}"
   resource_group_name          = "${var.resource_group_name}"
@@ -66,7 +60,7 @@ resource "azurerm_lb" "lb" {
 }
 
 resource "azurerm_lb_backend_address_pool" "lb" {
-#  count                        = "${module.lbaas.flag}"
+  count                        = "${module.lbaas.flag}"
   name                         = "${var.name}"
   loadbalancer_id              = "${azurerm_lb.lb.id}"
   resource_group_name          = "${var.resource_group_name}"
@@ -97,17 +91,17 @@ resource "azurerm_lb_probe" "lb" {
 }
 
 output "vip_address" {
-  value = "${data.azurerm_public_ip.lb.ip_address}"
+  value = "${azurerm_public_ip.lb.*.ip_address}"
 }
 output "vip_type" {
   value = "A"
 }
 
 locals {
-  pool_ids = "${compact(list(azurerm_lb_backend_address_pool.lb.id))}"
+  pool_ids = "${compact(concat(azurerm_lb_backend_address_pool.lb.*.id,list("")))}"
 }
 output "pool_id" {
-  value = "${azurerm_lb_backend_address_pool.lb.id}"
+  value = "${azurerm_lb_backend_address_pool.lb.*.id}"
 }
 output "pool_ids" {
   value = "${local.pool_ids}"
